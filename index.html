@@ -1,227 +1,336 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="nl">
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>LiPo Tracker</title>
 
 <style>
-
 body{
-
 background:#1e1e1e;
-
 color:white;
+font-family:Arial,sans-serif;
+padding:15px;
+margin:0;
+}
 
-font-family:Arial;
+h1{
+text-align:center;
+}
 
-padding:20px;
+.stats{
+display:flex;
+gap:10px;
+justify-content:center;
+margin-bottom:15px;
+flex-wrap:wrap;
+}
 
+.stat{
+padding:10px;
+border-radius:10px;
+background:#333;
 }
 
 .card{
-
 background:#333;
-
 padding:15px;
+margin-bottom:12px;
+border-radius:12px;
+}
 
-margin:10px;
+.volkaart{
+border-left:8px solid green;
+}
 
-border-radius:10px;
+.storagekaart{
+border-left:8px solid orange;
+}
 
+.leegkaart{
+border-left:8px solid red;
 }
 
 button{
-
-padding:10px;
-
-margin:5px;
-
-font-size:16px;
-
 border:none;
-
-border-radius:5px;
-
-cursor:pointer;
-
+padding:10px;
+margin:4px;
+border-radius:8px;
+font-size:16px;
 }
 
 .vol{
-
 background:green;
-
 color:white;
-
 }
 
 .storage{
-
 background:orange;
-
 }
 
 .leeg{
-
 background:red;
-
 color:white;
-
 }
 
-</style>
+.terug{
+background:#666;
+color:white;
+}
 
+.small{
+font-size:13px;
+color:#ccc;
+}
+</style>
 </head>
 
 <body>
 
-
 <h1>🔋 LiPo Tracker</h1>
 
-<div id="lijst"></div>
-
+<div id="app"></div>
 
 <script>
 
+const STORAGE_KEY="lipo_tracker_v1";
 
 let accus=[];
 
-
+function maakAccus(){
 
 for(let i=1;i<=20;i++){
 
 accus.push({
-
-id:"ACCU-"+String(i).padStart(3,'0'),
-
+id:"ACCU-"+String(i).padStart(3,"0"),
+type:"6S 1350mAh",
 status:"Storage",
-
-cycli:0
-
+cycli:0,
+laatste:"Nog nooit"
 });
 
 }
 
+}
 
+function laden(){
 
-function teken(){
+const data=localStorage.getItem(STORAGE_KEY);
 
+if(data){
 
-let html="";
+accus=JSON.parse(data);
 
+}else{
 
-accus.forEach((a,index)=>{
+maakAccus();
+opslaan();
 
+}
 
-html+=`
+}
 
+function opslaan(){
 
-<div class="card">
+localStorage.setItem(
+STORAGE_KEY,
+JSON.stringify(accus)
+);
 
+}
 
-<h3>${a.id}</h3>
+function tijd(){
 
+return new Date().toLocaleString("nl-NL");
 
-<p>Status :
-${a.status}</p>
+}
 
+function setVol(index){
 
-<p>Cycli :
-${a.cycli}</p>
+accus[index].status="Vol";
+accus[index].cycli++;
+accus[index].laatste=tijd();
 
+opslaan();
+render();
 
-<button class="vol"
+}
 
-onclick="vol(${index})">
+function setStorage(index){
 
+accus[index].status="Storage";
+accus[index].laatste=tijd();
 
-🟢 Vol
+opslaan();
+render();
 
+}
 
-</button>
+function setLeeg(index){
 
+accus[index].status="Leeg";
+accus[index].laatste=tijd();
 
+opslaan();
+render();
 
-<button class="storage"
+}
 
-onclick="storage(${index})">
+function statusClass(status){
 
+if(status==="Vol") return "volkaart";
 
-🟡 Storage
+if(status==="Leeg") return "leegkaart";
 
+return "storagekaart";
 
-</button>
+}
 
+function renderOverzicht(){
 
+let vol=accus.filter(a=>a.status==="Vol").length;
+let storage=accus.filter(a=>a.status==="Storage").length;
+let leeg=accus.filter(a=>a.status==="Leeg").length;
 
-<button class="leeg"
+let html=`
 
-onclick="leeg(${index})">
-
-
-🔴 Leeg
-
-
-</button>
-
-
-
+<div class="stats">
+<div class="stat">🟢 ${vol} Vol</div>
+<div class="stat">🟡 ${storage} Storage</div>
+<div class="stat">🔴 ${leeg} Leeg</div>
 </div>
-
-
 
 `;
 
+accus.forEach((a,index)=>{
 
+html+=`
+
+<div class="card ${statusClass(a.status)}">
+
+<h3>${a.id}</h3>
+
+<p>${a.type}</p>
+
+<p>Status: <b>${a.status}</b></p>
+
+<p>Cycli: <b>${a.cycli}</b></p>
+
+<p class="small">
+Laatste wijziging:<br>
+${a.laatste}
+</p>
+
+<button class="vol"
+onclick="setVol(${index})">
+🟢 Vol
+</button>
+
+<button class="storage"
+onclick="setStorage(${index})">
+🟡 Storage
+</button>
+
+<button class="leeg"
+onclick="setLeeg(${index})">
+🔴 Leeg
+</button>
+
+</div>
+
+`;
 
 });
 
-
-document.getElementById("lijst").innerHTML=html;
-
+document.getElementById("app").innerHTML=html;
 
 }
 
+function renderSingle(accuId){
 
+const index=
+accus.findIndex(a=>a.id===accuId);
 
-function vol(i){
+if(index===-1){
 
-accus[i].status="Vol";
-
-accus[i].cycli++;
-
-teken();
-
-}
-
-
-function storage(i){
-
-accus[i].status="Storage";
-
-teken();
+renderOverzicht();
+return;
 
 }
 
+const a=accus[index];
 
-function leeg(i){
+let html=`
 
-accus[i].status="Leeg";
+<div class="card ${statusClass(a.status)}">
 
-teken();
+<h2>${a.id}</h2>
+
+<p>${a.type}</p>
+
+<p>Status: <b>${a.status}</b></p>
+
+<p>Cycli: <b>${a.cycli}</b></p>
+
+<p class="small">
+Laatste wijziging:<br>
+${a.laatste}
+</p>
+
+<button class="vol"
+onclick="setVol(${index})">
+🟢 Vol
+</button>
+
+<button class="storage"
+onclick="setStorage(${index})">
+🟡 Storage
+</button>
+
+<button class="leeg"
+onclick="setLeeg(${index})">
+🔴 Leeg
+</button>
+
+<br><br>
+
+<button class="terug"
+onclick="window.location='?'">
+⬅ Terug naar overzicht
+</button>
+
+</div>
+
+`;
+
+document.getElementById("app").innerHTML=html;
 
 }
 
+function render(){
 
+const params=
+new URLSearchParams(window.location.search);
 
-teken();
+const id=params.get("id");
 
+if(id){
 
+renderSingle(id);
+
+}else{
+
+renderOverzicht();
+
+}
+
+}
+
+laden();
+render();
 
 </script>
 
 </body>
-
 </html>
