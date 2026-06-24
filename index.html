@@ -1,16 +1,227 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
+<meta charset="UTF-8">
+
 <title>LiPo Tracker</title>
+
+<style>
+
+body{
+
+background:#1e1e1e;
+
+color:white;
+
+font-family:Arial;
+
+padding:20px;
+
+}
+
+.card{
+
+background:#333;
+
+padding:15px;
+
+margin:10px;
+
+border-radius:10px;
+
+}
+
+button{
+
+padding:10px;
+
+margin:5px;
+
+font-size:16px;
+
+border:none;
+
+border-radius:5px;
+
+cursor:pointer;
+
+}
+
+.vol{
+
+background:green;
+
+color:white;
+
+}
+
+.storage{
+
+background:orange;
+
+}
+
+.leeg{
+
+background:red;
+
+color:white;
+
+}
+
+</style>
+
 </head>
 
-<body style="background:#1e1e1e;color:white;font-family:Arial;text-align:center;">
+<body>
+
 
 <h1>🔋 LiPo Tracker</h1>
 
-<h2>20× 6S 1350mAh</h2>
+<div id="lijst"></div>
 
-<p>De app werkt! 🎉</p>
+
+<script>
+
+
+let accus=[];
+
+
+
+for(let i=1;i<=20;i++){
+
+accus.push({
+
+id:"ACCU-"+String(i).padStart(3,'0'),
+
+status:"Storage",
+
+cycli:0
+
+});
+
+}
+
+
+
+function teken(){
+
+
+let html="";
+
+
+accus.forEach((a,index)=>{
+
+
+html+=`
+
+
+<div class="card">
+
+
+<h3>${a.id}</h3>
+
+
+<p>Status :
+${a.status}</p>
+
+
+<p>Cycli :
+${a.cycli}</p>
+
+
+<button class="vol"
+
+onclick="vol(${index})">
+
+
+🟢 Vol
+
+
+</button>
+
+
+
+<button class="storage"
+
+onclick="storage(${index})">
+
+
+🟡 Storage
+
+
+</button>
+
+
+
+<button class="leeg"
+
+onclick="leeg(${index})">
+
+
+🔴 Leeg
+
+
+</button>
+
+
+
+</div>
+
+
+
+`;
+
+
+
+});
+
+
+document.getElementById("lijst").innerHTML=html;
+
+
+}
+
+
+
+function vol(i){
+
+accus[i].status="Vol";
+
+accus[i].cycli++;
+
+teken();
+
+}
+
+
+function storage(i){
+
+accus[i].status="Storage";
+
+teken();
+
+}
+
+
+function leeg(i){
+
+accus[i].status="Leeg";
+
+teken();
+
+}
+
+
+
+teken();
+
+
+
+</script>
 
 </body>
+
 </html>
